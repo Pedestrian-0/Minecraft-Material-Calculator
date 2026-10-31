@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minecraft Calc</title>
+<style>
+:root{--bg:#eef1f4;--pn:#fff;--rw:#f3f6f9;--bd:#d3dae1;--fg:#18222d;--mu:#5d6a78;--ac:#16a34a;--on:#fff;--sel:#cfeedd;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11151a;--pn:#181d24;--rw:#232c36;--bd:#2e3844;--fg:#e8eef4;--mu:#8a97a6;--ac:#4ade80;--on:#06210f;--sel:#2c4a3b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11151a;--pn:#181d24;--rw:#232c36;--bd:#2e3844;--fg:#e8eef4;--mu:#8a97a6;--ac:#4ade80;--on:#06210f;--sel:#2c4a3b;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0 0 76px;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--pn);z-index:10}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--pn);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd)}
+h1{font-size:15px;margin:0;color:var(--ac);letter-spacing:.05em}h2{font-size:15px;margin:0 0 8px}
+main{padding:12px;max-width:720px;margin:auto}
+.card{background:var(--pn);border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.grid .card{margin:0}
+.st b{display:block;font-size:22px;color:var(--ac)}small{color:var(--mu)}
+input,select,button{font:inherit;color:var(--fg);background:var(--rw);border:1px solid var(--bd);border-radius:10px;padding:10px}
+button.pri{background:var(--ac);color:var(--on);border:0;font-weight:700}
+.f{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.f input[list]{flex:1 1 100%}.f input[type=number]{flex:1;min-width:0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 6px;border-bottom:1px solid var(--bd)}.row:last-child{border:0}
+.row input[type=number]{width:96px;padding:6px}.on2{color:var(--ac)}
+label.o{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0}label.o input[type=number],label.o select,label.o input[type=text]{width:150px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--pn);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav button{flex:1;border:0;border-radius:0;background:none;color:var(--mu);padding:15px 4px}nav .on{color:var(--ac);font-weight:700}
+.seg{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}.seg button{white-space:nowrap}.seg .on{background:var(--ac);color:var(--on);border:0}
+pre{white-space:pre-wrap;font:12px ui-monospace,monospace;margin:0}
+</style></head><body>
+<header><h1>MINECRAFT CALC</h1><button data-a="theme">Tema</button></header>
+<main></main><datalist id="names"></datalist>
+<nav><button data-v="p">Progetto</button><button data-v="i">Inventario</button><button data-v="o">Opzioni</button><button data-v="r">Risultati</button></nav>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const WOODS="oak spruce birch jungle acacia dark_oak mangrove cherry pale_oak bamboo crimson warped".split(" ");
+const FUELS={coal:8,charcoal:8,coal_block:80,blaze_rod:12,lava_bucket:100,dried_kelp_block:20,planks:1.5,log:1.5,stick:.5};
+const AL={block_of_iron:"iron_block",block_of_gold:"gold_block",block_of_diamond:"diamond_block",block_of_emerald:"emerald_block",block_of_redstone:"redstone_block",block_of_lapis_lazuli:"lapis_block",block_of_coal:"coal_block",block_of_copper:"copper_block",block_of_quartz:"quartz_block",redstone_dust:"redstone",lapis:"lapis_lazuli",stone_brick:"stone_bricks",brick_block:"bricks"};
+const WT="{w}_slab=6|{w}_planks*3\n{w}_stairs=4|{w}_planks*6\n{w}_fence=3|{w}_planks*4,stick*2\n{w}_fence_gate=1|{w}_planks*2,stick*4\n{w}_door=3|{w}_planks*6\n{w}_trapdoor=2|{w}_planks*6\n{w}_button=1|{w}_planks*1\n{w}_pressure_plate=1|{w}_planks*2\n{w}_sign=3|{w}_planks*6,stick*1";
+const DB=`stick=4|P*2
+crafting_table=1|P*4
+chest=1|P*8
+barrel=1|P*6,S*2
+ladder=3|stick*7
+composter=1|S*7
+chiseled_bookshelf=1|P*6,S*3
+paper=3|sugar_cane*3
+book=1|paper*3,leather*1
+bookshelf=1|P*6,book*3
+lectern=1|S*4,bookshelf*1
+torch=4|coal*1,stick*1
+stone~cobblestone
+smooth_stone~stone
+stone_bricks=4|stone*4
+cracked_stone_bricks~stone_bricks
+stone_slab=6|stone*3
+stone_stairs=4|stone*6
+smooth_stone_slab=6|smooth_stone*3
+stone_brick_slab=6|stone_bricks*3
+stone_brick_stairs=4|stone_bricks*6
+stone_brick_wall=6|stone_bricks*6
+chiseled_stone_bricks=1|stone_brick_slab*2
+cobblestone_slab=6|cobblestone*3
+cobblestone_stairs=4|cobblestone*6
+cobblestone_wall=6|cobblestone*6
+polished_andesite=4|andesite*4
+polished_diorite=4|diorite*4
+polished_granite=4|granite*4
+deepslate~cobbled_deepslate
+polished_deepslate=4|cobbled_deepslate*4
+deepslate_bricks=4|polished_deepslate*4
+deepslate_tiles=4|deepslate_bricks*4
+polished_blackstone=4|blackstone*4
+polished_blackstone_bricks=4|polished_blackstone*4
+nether_brick~netherrack
+nether_bricks=1|nether_brick*4
+red_nether_bricks=1|nether_brick*2,nether_wart*2
+nether_brick_slab=6|nether_bricks*3
+nether_brick_stairs=4|nether_bricks*6
+nether_brick_fence=6|nether_bricks*4,nether_brick*2
+chiseled_nether_bricks=1|nether_brick_slab*2
+glass~sand
+glass_pane=16|glass*6
+brick~clay_ball
+bricks=1|brick*4
+brick_slab=6|bricks*3
+brick_stairs=4|bricks*6
+clay=1|clay_ball*4
+terracotta~clay
+sandstone=1|sand*4
+sandstone_slab=6|sandstone*3
+cut_sandstone=4|sandstone*4
+smooth_sandstone~sandstone
+chiseled_sandstone=1|sandstone_slab*2
+quartz_block=1|quartz*4
+quartz_pillar=2|quartz_block*2
+quartz_slab=6|quartz_block*3
+quartz_bricks=4|quartz_block*4
+chiseled_quartz_block=1|quartz_slab*2
+smooth_quartz~quartz_block
+iron_ingot^raw_iron
+gold_ingot^raw_gold
+copper_ingot^raw_copper
+iron_block=1|iron_ingot*9
+gold_block=1|gold_ingot*9
+copper_block=1|copper_ingot*9
+diamond_block=1|diamond*9
+emerald_block=1|emerald*9
+lapis_block=1|lapis_lazuli*9
+redstone_block=1|redstone*9
+coal_block=1|coal*9
+cut_copper=4|copper_block*4
+iron_nugget=9|iron_ingot*1
+iron_bars=16|iron_ingot*6
+bucket=1|iron_ingot*3
+lantern=1|iron_nugget*8,torch*1
+redstone_torch=1|redstone*1,stick*1
+lever=1|stick*1,cobblestone*1
+repeater=1|redstone_torch*2,redstone*1,stone*3
+comparator=1|redstone_torch*3,quartz*1,stone*3
+piston=1|P*3,cobblestone*4,iron_ingot*1,redstone*1
+sticky_piston=1|piston*1,slime_ball*1
+observer=1|cobblestone*6,redstone*2,quartz*1
+dropper=1|cobblestone*7,redstone*1
+bow=1|stick*3,string*3
+dispenser=1|cobblestone*7,redstone*1,bow*1
+hopper=1|iron_ingot*5,chest*1
+rail=16|iron_ingot*6,stick*1
+glowstone=1|glowstone_dust*4
+daylight_detector=1|glass*3,quartz*3,S*3
+hay_block=1|wheat*9
+white_wool=1|string*4
+white_carpet=3|white_wool*2`;
+const SC="stone_stairs:1:stone,stone_slab:2:stone,stone_bricks:1:stone,stone_brick_stairs:1:stone_bricks,stone_brick_slab:2:stone_bricks,stone_brick_wall:1:stone_bricks,chiseled_stone_bricks:1:stone_bricks,smooth_stone_slab:2:smooth_stone,cobblestone_stairs:1:cobblestone,cobblestone_slab:2:cobblestone,cobblestone_wall:1:cobblestone,polished_deepslate:1:cobbled_deepslate,deepslate_bricks:1:cobbled_deepslate,deepslate_tiles:1:cobbled_deepslate,polished_blackstone:1:blackstone,polished_blackstone_bricks:1:blackstone,brick_slab:2:bricks,brick_stairs:1:bricks,sandstone_slab:2:sandstone,cut_sandstone:1:sandstone,nether_brick_slab:2:nether_bricks,nether_brick_stairs:1:nether_bricks,quartz_slab:2:quartz_block,quartz_pillar:1:quartz_block,quartz_bricks:1:quartz_block,chiseled_quartz_block:1:quartz_block,cut_copper:4:copper_block";
+
+const norm=n=>{n=n.trim().toLowerCase().replace(/['’]/g,"").replace(/-/g,"_").replace(/[^a-z0-9_ ]/g,"").replace(/\s+/g,"_").replace(/^_|_$/g,"");return AL[n]||n};
+const pretty=n=>n.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+const fmt=n=>Math.round(n).toLocaleString("it-IT");
+const ss=i=>i=="lava_bucket"?1:(i=="bucket"||i.endsWith("_sign"))?16:64;
+const stk=(n,i)=>{const s=ss(i);return s==1||n<s?fmt(n):fmt(Math.floor(n/s))+" st"+(n%s?" + "+n%s:"")};
+const fmtT=s=>{s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return(h?h+"h ":"")+(h||m?m+"m ":"")+s%60+"s"};
+
+function build(wood,sc,raw){
+  const R={},P=wood+"_planks",S=wood+"_slab",fix=t=>t=="P"?P:t=="S"?S:t;
+  function parse(l){l=l.trim();if(!l)return;let k="c",o,n=1,r;
+    if(l.includes("~")){[o,r]=l.split("~");k="s";r+="*1"}
+    else if(l.includes("^")){[o,r]=l.split("^");k="o";r+="*1"}
+    else{let a;[a,r]=l.split("|");[o,n]=a.split("=");n=+n}
+    const ing={};r.split(",").forEach(x=>{const[i,q]=x.split("*");ing[fix(i)]=+q});R[o]={n,ing,k}}
+  for(const w of WOODS){
+    const src=w=="bamboo"?"bamboo_block":/crimson|warped/.test(w)?w+"_stem":w+"_log";
+    R[w+"_planks"]={n:w=="bamboo"?2:4,ing:{[src]:1},k:"c"};
+    WT.replace(/\{w\}/g,w).split("\n").forEach(parse)}
+  DB.split("\n").forEach(parse);
+  if(sc)SC.split(",").forEach(x=>{const[o,n,s]=x.split(":");R[o]={n:+n,ing:{[s]:1},k:"c"}});
+  raw.forEach(k=>delete R[k]);
+  return R}
+
+function solve(tg,R,have){
+  const need={...tg},seen=new Set(),post=[];
+  const dfs=x=>{if(seen.has(x))return;seen.add(x);if(R[x])for(const i in R[x].ing)dfs(i);post.push(x)};
+  for(const t in tg)dfs(t);
+  const order=post.reverse(),runs={},used={};
+  for(const it of order){const nd=need[it]||0,h=Math.min(have[it]||0,nd);
+    if(h){used[it]=h;need[it]=nd-h}
+    if(R[it]&&need[it]>0){const r=Math.ceil(need[it]/R[it].n);runs[it]=r;for(const i in R[it].ing)need[i]=(need[i]||0)+r*R[it].ing[i]}}
+  const raw={};order.forEach(i=>{if(!R[i])raw[i]=need[i]});
+  return{need,used,runs,raw,steps:order.filter(i=>runs[i]).reverse()}}
+
+function plan(){
+  const mult=Math.max(1,S.mult),furn=Math.max(1,S.furn),tg={};
+  for(const k in S.t)tg[k]=Math.ceil(S.t[k]*mult*(100+S.margin)/100);
+  const R=build(S.wood,S.sc,S.rawtxt.split(",").map(norm).filter(Boolean)),P=solve(tg,R,S.h);
+  let sm=0,ore=0;
+  P.steps.forEach(i=>{const n=P.runs[i]*R[i].n;if(R[i].k=="o")ore+=n;else if(R[i].k=="s")sm+=n});
+  const eff=sm+ore*(S.blast?.5:1),secs=(sm*10+ore*(S.blast?5:10))/furn;
+  P.fuels={};if(eff)for(const f in FUELS)P.fuels[f]=Math.ceil(eff/FUELS[f]);
+  return Object.assign(P,{R,sm,ore,secs,tg,furn})}
+
+let S={t:{},h:{},rawtxt:"",wood:"oak",fuel:"coal",furn:1,margin:0,mult:1,blast:false,sc:false,got:{},done:{}},view="p",sub="m";
+try{Object.assign(S,JSON.parse(localStorage.getItem("mcc")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("mcc",JSON.stringify(S))}catch(e){}};
+try{const t=localStorage.getItem("mcct");if(t)document.documentElement.dataset.theme=t}catch(e){}
+
+const form=l=>`<div class="f"><input list="names" id="n${l}" placeholder="Oggetto (es. chiseled bookshelf)"><input id="q${l}" type="number" min="1" value="1" inputmode="numeric"><select id="u${l}"><option>pezzi<option>stack</select><button class="pri" data-a="add" data-l="${l}">Aggiungi</button></div>`;
+const lst=l=>Object.entries(S[l]).map(([k,v])=>`<div class="row"><span>${pretty(k)}</span><span><input type="number" min="1" value="${v}" data-e="${l}|${k}"> <button data-a="del" data-l="${l}" data-k="${k}">×</button></span></div>`).join("")||"<small>Nessun oggetto.</small>";
+const st=(t,v,s)=>`<div class="card st"><small>${t}</small><b>${v}</b><small>${s||"&nbsp;"}</small></div>`;
+const opt=(l,inner)=>`<label class="o"><span>${l}</span>${inner}</label>`;
+const sel=(o,vals)=>`<select data-o="${o}">${vals.map(v=>`<option${S[o]==v?" selected":""}>${v}</option>`).join("")}</select>`;
+const num=(o)=>`<input type="number" min="0" data-o="${o}" value="${S[o]}" inputmode="numeric">`;
+const chk=(o)=>`<input type="checkbox" data-o="${o}"${S[o]?" checked":""}>`;
+
+function vP(){return`<div class="card"><h2>Cosa vuoi costruire?</h2>${form("t")}${lst("t")}</div>
+<div class="card"><h2>Litematica</h2><input type="file" id="file" accept=".csv,.txt"><label class="o"><span>Solo blocchi mancanti (Missing)</span><input type="checkbox" id="miss"></label></div>`}
+function vI(){return`<div class="card"><h2>Cosa hai già?</h2><small>Viene sottratto dal calcolo, anche per i pezzi intermedi.</small>${form("h")}${lst("h")}</div>`}
+function vO(){return`<div class="card"><h2>Opzioni</h2>
+${opt("Legno",sel("wood",WOODS))}${opt("Combustibile",sel("fuel",Object.keys(FUELS)))}${opt("Fornaci in parallelo",num("furn"))}${opt("Margine extra (%)",num("margin"))}${opt("Ripeti progetto ×",num("mult"))}
+${opt("Blast furnace per minerali",chk("blast"))}${opt("Stonecutter",chk("sc"))}
+${opt("Materiali base (virgole)",`<input type="text" data-o="rawtxt" value="${S.rawtxt}" placeholder="es. oak_planks">`)}</div>`}
+
+function report(P){
+  const L=["MATERIALI BASE"];
+  for(const[i,n]of Object.entries(P.raw))L.push(`${pretty(i)}: ${fmt(n)} (${stk(n,i)})`+(P.used[i]?` [+${fmt(P.used[i])} da inventario]`:""));
+  L.push("","PASSAGGI");
+  P.steps.forEach((i,k)=>{const r=P.runs[i],q=P.R[i];L.push(`${k+1}. ${q.k=="c"?"CRAFT":"SMELT"} ${pretty(i)}: ${fmt(r*q.n)} (${fmt(r)} ${q.k=="c"?"craft":"da cuocere"})  <- `+Object.entries(q.ing).map(([a,b])=>fmt(r*b)+" "+pretty(a)).join(" + "))});
+  if(P.sm+P.ore){L.push("","COMBUSTIBILE ("+fmtT(P.secs)+" con "+P.furn+" fornaci)");for(const f in P.fuels)L.push(`${pretty(f)}: ${fmt(P.fuels[f])}`)}
+  return L.join("\n")}
+
+function vR(){
+  if(!Object.keys(S.t).length)return`<div class="card"><small>Aggiungi almeno un oggetto in Progetto.</small></div>`;
+  const P=plan(),sm=P.sm+P.ore,stacks=Object.entries(P.raw).reduce((a,[i,n])=>a+Math.ceil(n/ss(i)),0),crafts=P.steps.reduce((a,i)=>a+(P.R[i].k=="c"?P.runs[i]:0),0);
+  let h=`<div class="grid">${st("Materiali base",Object.keys(P.raw).length,P.steps.length+" passaggi")}${st("Da raccogliere",fmt(stacks)+" st","")}${st("Craft",fmt(crafts),"")}${st("Smelt",fmt(sm),sm?"~"+fmtT(P.secs)+" · "+fmt(P.fuels[S.fuel])+" "+pretty(S.fuel):"nessuna fusione")}</div>`;
+  h+=`<div class="seg">${[["m","Materiali"],["s","Passaggi"],["f","Combustibile"],["r","Report"]].map(([k,t])=>`<button data-a="sub" data-s="${k}" class="${sub==k?"on":""}">${t}</button>`).join("")}</div><div class="card">`;
+  if(sub=="m")h+=Object.entries(P.raw).sort((a,b)=>a[0]<b[0]?-1:1).map(([i,n])=>{const g=S.got[i]||0,p=n?Math.min(100,g*100/n):100;
+    return`<div class="row" style="background:linear-gradient(90deg,var(--sel) ${p}%,transparent 0)"><span><b>${pretty(i)}</b><br><small>${fmt(n)} · ${stk(n,i)}${P.used[i]?" · inv. "+fmt(P.used[i]):""}</small></span><span><small>raccolti</small> <input type="number" min="0" value="${g}" data-g="${i}"></span></div>`}).join("")+`<button data-a="reset" style="margin-top:8px">Azzera raccolti e passaggi</button>`;
+  else if(sub=="s")h+=P.steps.map((i,k)=>{const r=P.runs[i],q=P.R[i],d=S.done[i];
+    return`<div class="row" data-a="done" data-k="${i}"><span class="${d?"on2":""}"><b>${d?"✓ ":""}${q.k=="c"?"CRAFT":"SMELT"} ${pretty(i)}</b><br><small>${fmt(r*q.n)} pezzi · ${Object.entries(q.ing).map(([a,b])=>fmt(r*b)+" "+pretty(a)).join(" + ")}</small></span></div>`}).join("");
+  else if(sub=="f")h+=sm?`<small>${fmt(sm)} oggetti da smeltare · ${P.furn} fornaci · ${fmtT(P.secs)}</small>`+Object.entries(P.fuels).map(([f,q])=>`<div class="row${f==S.fuel?" on2":""}"><span>${pretty(f)}</span><b>${fmt(q)}</b></div>`).join("")+`<small>Ne basta uno. La carbonella si ottiene cuocendo 1 log.</small>`:"Niente da smeltare.";
+  else h+=`<button data-a="copy" class="pri">Copia report</button><pre style="margin-top:10px">${report(P)}</pre>`;
+  return h+"</div>"}
+
+function render(){
+  $$("nav button").forEach(b=>b.classList.toggle("on",b.dataset.v==view));
+  $("main").innerHTML={p:vP,i:vI,o:vO,r:vR}[view]();
+  const m=$("#miss");if(m)m.checked=!!window._miss}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-a],[data-v]");if(!b)return;const d=b.dataset,l=d.l,k=d.k;
+  if(d.v){view=d.v;return render()}
+  if(d.a=="add"){const nm=norm($("#n"+l).value),q=parseInt($("#q"+l).value)||0;if(!nm||q<1)return;S[l][nm]=(S[l][nm]||0)+q*($("#u"+l).value=="stack"?ss(nm):1)}
+  else if(d.a=="del")delete S[l][k];
+  else if(d.a=="done")S.done[k]=!S.done[k];
+  else if(d.a=="sub")sub=d.s;
+  else if(d.a=="reset"){S.got={};S.done={}}
+  else if(d.a=="copy"){const t=$("pre").textContent;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>b.textContent="Copiato ✓");return}
+  else if(d.a=="theme"){const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=dark?"light":"dark";try{localStorage.setItem("mcct",r.dataset.theme)}catch(x){}return}
+  save();render()});
+
+document.addEventListener("change",e=>{
+  const t=e.target,d=t.dataset;
+  if(d.g!==undefined){S.got[d.g]=Math.max(0,+t.value||0);save();return}
+  if(d.e){const[l,k]=d.e.split("|");if(+t.value>0)S[l][k]=+t.value;save();return}
+  if(d.o){S[d.o]=t.type=="checkbox"?t.checked:t.type=="number"?Math.max(0,+t.value||0):t.value;save();render();return}
+  if(t.id=="miss"){window._miss=t.checked;return}
+  if(t.id=="file"&&t.files[0]){const fr=new FileReader();fr.onload=()=>{imp(fr.result);save();render()};fr.readAsText(t.files[0])}});
+
+function imp(txt){let idx=window._miss?2:1;
+  txt.split(/\r?\n/).forEach(line=>{line=line.trim();if(!line||/^[+\-=| ]+$/.test(line))return;
+    const c=(line.includes("|")?line.replace(/^\||\|$/g,"").split("|"):line.includes(",")?line.split(","):null);if(!c)return;
+    const cells=c.map(x=>x.replace(/"/g,"").trim()),low=cells.map(x=>x.toLowerCase());
+    if(["item","name"].includes(low[0])){low.forEach((x,i)=>{if(window._miss&&x.startsWith("missing")||!window._miss&&x.startsWith("total"))idx=i});return}
+    const m=(cells[idx]||"").match(/\d+/);if(m&&+m[0]>0){const k=norm(cells[0]);S.t[k]=(S.t[k]||0)+ +m[0]}})}
+
+const names=new Set();Object.keys(build("oak",false,[])).forEach(k=>names.add(k));Object.values(build("oak",false,[])).forEach(r=>Object.keys(r.ing).forEach(i=>names.add(i)));
+$("#names").innerHTML=[...names].sort().map(n=>`<option value="${pretty(n)}">`).join("");
+render();
+</script></body></html>
